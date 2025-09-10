@@ -17,28 +17,29 @@ untuk menyimpan token Captcha sementara dengan TTL (time-to-live) dan opsi konsu
 ```bash
 node -v
 npm -v
-
+```
 ###3. Install Dependency
-
+```
 npm init -y
 npm i @vercel/node @vercel/kv
 npm i -D typescript @types/node vercel
 npx tsc --init
-
+```
 ###4. Konfigurasi 
-- package.json → tambahkan script:
 
+- package.json → tambahkan script:
+```
 "scripts": {
   "dev": "vercel dev --port 3000",
   "deploy": "vercel --prod"
 }
-
+```
 - vercel.json
-
+```
 {}
-
+```
 - tsconfig.json (pastikan minimal seperti ini):
-
+```
 {
   "compilerOptions": {
     "target": "ES2022",
@@ -50,7 +51,7 @@ npx tsc --init
   },
   "include": ["**/*.ts"]
 }
-
+```
 ###5. Buat API Function
 
 - api/captcha/index.ts:
