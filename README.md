@@ -1,45 +1,112 @@
----
+# ðŸ›¡ï¸ Simple Captcha Token Server (Vercel + KV)
 
-# 🛡️ Simple Captcha Token Server (Vercel + KV)
+Server sederhana berbasis **Vercel Serverless Function** + **Vercel KV
+(Upstash Redis)** untuk menyimpan token Captcha sementara dengan TTL
+(time-to-live) dan opsi konsumsi satu kali (one-time).
 
-Proyek ini adalah server sederhana menggunakan **Vercel Serverless Function** + **Vercel KV (Upstash Redis)**  
-untuk menyimpan token Captcha sementara dengan TTL (time-to-live) dan opsi konsumsi sekali pakai.
+------------------------------------------------------------------------
 
----
+## Daftar Isi
 
-## 🚀 Setup & Deploy
+-   [Fitur](#fitur)
+-   [Arsitektur Singkat](#arsitektur-singkat)
+-   [Prasyarat](#prasyarat)
+-   [Setup & Deploy](#-setup--deploy)
+    -   [1) Buka Codespaces (opsional)](#1-buka-codespaces-opsional)
+    -   [2) Cek Node.js & npm](#2-cek-nodejs--npm)
+    -   [3) Instalasi Dependencies](#3-instalasi-dependencies)
+    -   [4) Konfigurasi Project](#4-konfigurasi-project)
+    -   [5) Buat API Function](#5-buat-api-function)
+    -   [6) Login & Init Vercel](#6-login--init-vercel)
+    -   [7) Tambahkan Vercel KV](#7-tambahkan-vercel-kv)
+    -   [8) Tarik ENV untuk Lokal
+        (opsional)](#8-tarik-env-untuk-lokal-opsional)
+    -   [9) Jalankan Secara Lokal](#9-jalankan-secara-lokal)
+-   [Spesifikasi API](#spesifikasi-api)
+    -   [POST `/api/captcha`](#post-apicaptcha)
+    -   [GET `/api/captcha`](#get-apicaptcha)
+-   [Contoh cURL](#contoh-curl)
+-   [CORS](#cors)
+-   [Catatan Keamanan & Praktik
+    Terbaik](#catatan-keamanan--praktik-terbaik)
+-   [Struktur Direktori](#struktur-direktori)
+-   [Lisensi](#lisensi)
 
-### 1. Buka Codespaces
-- Buka repo di GitHub → **Code → Codespaces → Create codespace on main**.
-- Tunggu sampai environment terbuka.
+------------------------------------------------------------------------
 
-### 2. Cek Node.js & npm
-```bash
+## Fitur
+
+-   Simpan token Captcha di **Vercel KV** dengan TTL (default **120
+    detik**, maksimum **600 detik**).
+-   Ambil token berdasarkan `id`.
+-   Opsi **sekali pakai**: hapus token saat diambil (`consume=true`).
+-   **CORS** diizinkan untuk semua origin (bisa disesuaikan).
+
+------------------------------------------------------------------------
+
+## Arsitektur Singkat
+
+-   **Client** menghasilkan dan mengirim token + `id` â†’ **Serverless
+    Function** menyimpan ke **KV** dengan TTL.
+-   **Verifier** (mis. backend Anda) meng-`GET` token berdasarkan `id`
+    dan bisa **mengonsumsi** (hapus) token tersebut.
+
+------------------------------------------------------------------------
+
+## Prasyarat
+
+-   Node.js 18+ dan npm
+-   Akun Vercel
+-   Akses **Vercel KV (Upstash Redis)**
+
+------------------------------------------------------------------------
+
+## ðŸš€ Setup & Deploy
+
+### 1) Buka Codespaces (opsional)
+
+-   Buka repo di GitHub â†’ **Code â†’ Codespaces â†’ Create codespace on
+    main**.
+-   Tunggu environment siap.
+
+### 2) Cek Node.js & npm
+
+``` bash
 node -v
 npm -v
 ```
-###3. Install Dependency
-```
+
+### 3) Instalasi Dependencies
+
+``` bash
 npm init -y
 npm i @vercel/node @vercel/kv
 npm i -D typescript @types/node vercel
 npx tsc --init
 ```
-###4. Konfigurasi 
 
-- package.json → tambahkan script:
-```
-"scripts": {
-  "dev": "vercel dev --port 3000",
-  "deploy": "vercel --prod"
+### 4) Konfigurasi Project
+
+**`package.json`** â†’ tambahkan script:
+
+``` json
+{
+  "scripts": {
+    "dev": "vercel dev --port 3000",
+    "deploy": "vercel --prod"
+  }
 }
 ```
-- vercel.json
-```
+
+**`vercel.json`** (minimal):
+
+``` json
 {}
 ```
-- tsconfig.json (pastikan minimal seperti ini):
-```
+
+**`tsconfig.json`** (minimal):
+
+``` json
 {
   "compilerOptions": {
     "target": "ES2022",
@@ -52,10 +119,12 @@ npx tsc --init
   "include": ["**/*.ts"]
 }
 ```
-###5. Buat API Function
 
-- api/captcha/index.ts:
+### 5) Buat API Function
 
+**`api/captcha/index.ts`**
+
+``` ts
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { kv } from '@vercel/kv';
 
@@ -110,84 +179,142 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'internal error', detail: err?.message });
   }
 }
+```
 
-###6. Login & Init Vercel
+### 6) Login & Init Vercel
 
+``` bash
 npx vercel login
 npx vercel
+```
 
-###7. Tambahkan KV
+### 7) Tambahkan Vercel KV
 
-Buka Vercel Dashboard → Project → Storage → Add → Upstash Redis.
+-   Vercel Dashboard â†’ Project â†’ **Storage** â†’ **Add** â†’ **Upstash
+    Redis**.
+-   Attach ke **Production**.
+-   Env vars akan otomatis dibuat:
+    -   `KV_REST_API_URL`
+    -   `KV_REST_API_TOKEN`
 
-Attach ke Production environment.
+### 8) Tarik ENV untuk Lokal (opsional)
 
-Env vars otomatis dibuat:
-
-KV_REST_API_URL
-
-KV_REST_API_TOKEN
-
-
-
-###8. Tarik Env (opsional untuk lokal dev)
-
+``` bash
 npx vercel env pull .env.local
+```
 
-###9. Jalankan Lokal
+### 9) Jalankan Secara Lokal
 
+``` bash
 npm run dev
+```
 
-- Buka http://localhost:3000/api/captcha (atau URL Codespaces).
+-   Buka `http://localhost:3000/api/captcha` (atau URL Codespaces).
 
+------------------------------------------------------------------------
 
----
+## Spesifikasi API
 
-###🌐 Deploy ke Production
+### POST `/api/captcha`
 
-npm run deploy
+Simpan token dengan TTL.
 
-- Hasilnya → https://<project>.vercel.app/api/captcha.
+**Body (JSON)**
 
+``` json
+{
+  "id": "unique-captcha-id",
+  "token": "captcha-token-value",
+  "ttl": 120
+}
+```
 
----
+-   `id` (wajib): identifier unik token.
+-   `token` (wajib): nilai token.
+-   `ttl` (opsional): detik; default **120**, maksimum **600**.
 
-###🔧 Contoh Penggunaan
+**Response** - `201 Created`
 
-- Simpan Token
+``` json
+{ "ok": true, "ttl": 120 }
+```
 
-curl -X POST "https://<project>.vercel.app/api/captcha" \
-  -H "Content-Type: application/json" \
-  -d '{"id":"abc123","token":"HELLO","ttl":120}'
+-   `400 Bad Request` jika field wajib tidak ada.
+-   `500 Internal Server Error` jika terjadi kesalahan server.
 
-- Ambil Token (tanpa hapus)
+------------------------------------------------------------------------
 
-curl "https://<project>.vercel.app/api/captcha?id=abc123"
+### GET `/api/captcha?id=...&consume=...`
 
-- Ambil + Hapus Token (sekali pakai)
+Ambil token berdasarkan `id`.
 
-curl "https://<project>.vercel.app/api/captcha?id=abc123&consume=true"
+**Query** - `id` (wajib): identifier token. - `consume` (opsional):
+`true`/`false`. Jika `true`, token akan dihapus setelah diambil.
 
+**Response** - `200 OK`
 
----
+``` json
+{ "token": "captcha-token-value", "consumed": true }
+```
 
-###📦 GitHub Push
+-   `400 Bad Request` jika `id` tidak diberikan.
+-   `404 Not Found` jika token tidak ada atau sudah kedaluwarsa.
 
-git add .
-git commit -m "init captcha server"
-git branch -M main
-git remote add origin https://github.com/<username>/<repo>.git
-git push -u origin main
+------------------------------------------------------------------------
 
+## Contoh cURL
 
+**Simpan token**
 
-###✅ Catatan
+``` bash
+curl -X POST "https://<YOUR-VERCEL-URL>/api/captcha"   -H "Content-Type: application/json"   -d '{"id":"abc123","token":"xyz789","ttl":180}'
+```
 
-TTL default 120 detik (max 10 menit).
+**Ambil token tanpa konsumsi**
 
-Token dihapus otomatis setelah TTL habis atau sekali pakai (consume=true).
+``` bash
+curl "https://<YOUR-VERCEL-URL>/api/captcha?id=abc123"
+```
 
-Free plan Vercel + KV cukup untuk puluhan ribu request/bulan.
+**Ambil token dan konsumsi (hapus)**
 
+``` bash
+curl "https://<YOUR-VERCEL-URL>/api/captcha?id=abc123&consume=true"
+```
 
----
+------------------------------------------------------------------------
+
+## CORS
+
+Header CORS diaktifkan untuk semua origin (`*`) pada metode `GET`,
+`POST`, dan `OPTIONS`. Atur ulang kebijakan ini sesuai kebutuhan
+produksi Anda.
+
+------------------------------------------------------------------------
+
+## Catatan Keamanan & Praktik Terbaik
+
+-   Gunakan `consume=true` saat verifikasi agar token **sekali pakai**.
+-   Batasi TTL seperlunya; default 120 detik, maksimum 600 detik.
+-   Validasi `id`/`token` di sisi Anda sesuai kebutuhan keamanan.
+-   Untuk produksi, pertimbangkan pembatasan origin (CORS) dan
+    rate-limiting.
+
+------------------------------------------------------------------------
+
+## Struktur Direktori
+
+    .
+    â”œâ”€â”€ api/
+    â”‚   â””â”€â”€ captcha/
+    â”‚       â””â”€â”€ index.ts
+    â”œâ”€â”€ package.json
+    â”œâ”€â”€ tsconfig.json
+    â””â”€â”€ vercel.json
+
+------------------------------------------------------------------------
+
+## Lisensi
+
+Bebas digunakan untuk kebutuhan Anda. Tambahkan file `LICENSE` jika
+memerlukan ketentuan spesifik (mis. MIT).
