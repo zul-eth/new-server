@@ -18,27 +18,26 @@ untuk menyimpan token Captcha sementara dengan TTL (time-to-live) dan opsi konsu
 node -v
 npm -v
 
-3. Install Dependency
+###3. Install Dependency
 
 npm init -y
 npm i @vercel/node @vercel/kv
 npm i -D typescript @types/node vercel
 npx tsc --init
 
-4. Konfigurasi
-
-package.json → tambahkan script:
+###4. Konfigurasi 
+- package.json → tambahkan script:
 
 "scripts": {
   "dev": "vercel dev --port 3000",
   "deploy": "vercel --prod"
 }
 
-vercel.json
+- vercel.json
 
 {}
 
-tsconfig.json (pastikan minimal seperti ini):
+- tsconfig.json (pastikan minimal seperti ini):
 
 {
   "compilerOptions": {
@@ -52,9 +51,9 @@ tsconfig.json (pastikan minimal seperti ini):
   "include": ["**/*.ts"]
 }
 
-5. Buat API Function
+###5. Buat API Function
 
-api/captcha/index.ts:
+- api/captcha/index.ts:
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { kv } from '@vercel/kv';
@@ -111,12 +110,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-6. Login & Init Vercel
+###6. Login & Init Vercel
 
 npx vercel login
 npx vercel
 
-7. Tambahkan KV
+###7. Tambahkan KV
 
 Buka Vercel Dashboard → Project → Storage → Add → Upstash Redis.
 
@@ -130,48 +129,48 @@ KV_REST_API_TOKEN
 
 
 
-8. Tarik Env (opsional untuk lokal dev)
+###8. Tarik Env (opsional untuk lokal dev)
 
 npx vercel env pull .env.local
 
-9. Jalankan Lokal
+###9. Jalankan Lokal
 
 npm run dev
 
-Buka http://localhost:3000/api/captcha (atau URL Codespaces).
+- Buka http://localhost:3000/api/captcha (atau URL Codespaces).
 
 
 ---
 
-🌐 Deploy ke Production
+###🌐 Deploy ke Production
 
 npm run deploy
 
-Hasilnya → https://<project>.vercel.app/api/captcha.
+- Hasilnya → https://<project>.vercel.app/api/captcha.
 
 
 ---
 
-🔧 Contoh Penggunaan
+###🔧 Contoh Penggunaan
 
-Simpan Token
+- Simpan Token
 
 curl -X POST "https://<project>.vercel.app/api/captcha" \
   -H "Content-Type: application/json" \
   -d '{"id":"abc123","token":"HELLO","ttl":120}'
 
-Ambil Token (tanpa hapus)
+- Ambil Token (tanpa hapus)
 
 curl "https://<project>.vercel.app/api/captcha?id=abc123"
 
-Ambil + Hapus Token (sekali pakai)
+- Ambil + Hapus Token (sekali pakai)
 
 curl "https://<project>.vercel.app/api/captcha?id=abc123&consume=true"
 
 
 ---
 
-📦 GitHub Push
+###📦 GitHub Push
 
 git add .
 git commit -m "init captcha server"
@@ -181,7 +180,7 @@ git push -u origin main
 
 
 
-✅ Catatan
+###✅ Catatan
 
 TTL default 120 detik (max 10 menit).
 
